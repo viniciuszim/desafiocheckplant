@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
+import { showMessage } from 'react-native-flash-message';
+
 import styles from './styles';
 
 export default class Welcome extends Component {
@@ -42,6 +44,20 @@ export default class Welcome extends Component {
     const { infoInput } = this.state;
     console.tron.log(`infoInput: ${infoInput}`);
 
+    if (infoInput === '') {
+      showMessage({
+        message: 'Você precisa informar a descrição para poder salvar!',
+        type: 'warning',
+        icon: 'warning',
+      });
+      return false;
+    }
+
+    showMessage({
+      message: 'Informação salva localmente!',
+      type: 'success',
+      icon: 'success',
+    });
     const { navigation } = this.props;
     navigation.navigate('Welcome');
   };

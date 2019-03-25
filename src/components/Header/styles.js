@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { colors } from '~/styles';
+import { colors, metrics } from '~/styles';
 
 const styles = StyleSheet.create({
   header: {
@@ -8,7 +8,7 @@ const styles = StyleSheet.create({
   },
 
   headerLeftContainer: {
-    marginLeft: 15,
+    marginLeft: metrics.baseMargin + 5,
   },
   iconLeft: {
     fontSize: 24,
@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
   },
 
   headerRightContainer: {
-    marginRight: 15,
+    marginRight: metrics.baseMargin + 5,
   },
   iconRight: {
     fontSize: 24,

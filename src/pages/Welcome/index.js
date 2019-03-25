@@ -2,12 +2,29 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 import {
-  View, Text, StatusBar, Animated, SafeAreaView, ScrollView,
+  View,
+  Text,
+  StatusBar,
+  Animated,
+  SafeAreaView,
+  ScrollView,
+  Platform,
+  PermissionsAndroid,
+  NativeModules,
+  Linking,
+  Alert,
 } from 'react-native';
 
 import MapView, { Callout } from 'react-native-maps';
 
+import Geocode from 'react-geocode';
+
+import { showMessage } from 'react-native-flash-message';
+import Spinner from 'react-native-loading-spinner-overlay';
+
 import styles from './styles';
+
+import stringsUtil from '~/util/strings';
 
 export default class Welcome extends Component {
   static propTypes = {
@@ -18,8 +35,8 @@ export default class Welcome extends Component {
 
   state = {
     region: {
-      latitude: 45.52220671242907,
-      longitude: -122.6653281029795,
+      latitude: 0,
+      longitude: 0,
       latitudeDelta: 0.04864195044303443,
       longitudeDelta: 0.040142817690068,
     },
@@ -27,10 +44,10 @@ export default class Welcome extends Component {
       {
         key: 0,
         coordinate: {
-          latitude: 45.524548,
-          longitude: -122.6749817,
+          latitude: -16.6769,
+          longitude: -49.2648,
         },
-        title: 'Best Place',
+        date: '24/03/2019',
         description: 'This is the best place in Portland',
       },
     ],
@@ -38,10 +55,10 @@ export default class Welcome extends Component {
       {
         key: 1,
         coordinate: {
-          latitude: 45.524698,
-          longitude: -122.6655507,
+          latitude: -16.6870,
+          longitude: -49.2548,
         },
-        title: 'Second Best Place',
+        date: '25/03/2019',
         description: 'This is the second best place in Portland',
       },
     ],
@@ -50,11 +67,111 @@ export default class Welcome extends Component {
   componentDidMount() {
     const { navigation } = this.props;
     navigation.setParams({ titleParam: 'Checkplant' });
-    navigation.setParams({ handleRightClick: this.handleNewInformations.bind(this) });
+    navigation.setParams({ handleRightClick: this.handleSync.bind(this) });
+
+    this.checkPermissions();
   }
 
-  handleNewInformations = async () => {
-    console.tron.log('handleNewInformations');
+  checkPermissions = async () => {
+    try {
+      if (Platform.OS === 'ios') {
+        this.requestPermissions();
+      } else {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Localização',
+            message:
+              'Permitir acesso a sua localização para salvar os registros',
+            buttonNeutral: 'Pergunte depois',
+            buttonNegative: 'Continuar não permitindo',
+            buttonPositive: 'OK',
+          },
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          this.requestPermissions();
+        } else {
+          this.showAlert();
+        }
+      }
+    } catch (err) {
+      console.error(`An error occurred at checkPermissions -> ${err}`);
+    }
+  };
+
+  requestPermissions = async () => {
+    try {
+      navigator.geolocation.getCurrentPosition(
+        (response) => {
+          // set Google Maps Geocoding API for purposes of quota management.
+          Geocode.setApiKey(stringsUtil.keys.geocode);
+
+          // Enable or disable logs. Its optional.
+          Geocode.enableDebug();
+
+          const { region } = this.state;
+          this.setState({
+            region: {
+              ...region,
+              latitude: response.coords.latitude,
+              longitude: response.coords.longitude,
+            },
+          });
+          console.tron.log(response.coords);
+        },
+        (error) => {
+          if (error.PERMISSION_DENIED === 1) {
+            this.showAlert();
+          }
+        },
+      );
+    } catch (err) {
+      console.error(`An error occurred at requestPermissions -> ${err}`);
+    }
+  }
+
+  showAlert = () => {
+    Alert.alert(
+      'Localização',
+      'Permitir acesso a sua localização para salvar os registros',
+      [
+        {
+          text: 'Pergunte depois',
+          onPress: () => console.log('Ask me later pressed'),
+        },
+        {
+          text: 'Continuar não permitindo',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {
+          text: 'Permitir',
+          onPress: () => this.openAppSettings(),
+        },
+      ],
+      {
+        cancelable: false,
+      },
+    );
+  };
+
+  openAppSettings = () => {
+    if (Platform.OS === 'ios') {
+      Linking.openURL('app-settings:');
+    } else {
+      const { RNAndroidOpenSettings } = NativeModules;
+      RNAndroidOpenSettings.appDetailsSettings();
+    }
+  };
+
+  handleSync = async () => {
+    console.tron.log('handleSync');
+
+    showMessage({
+      message: 'Dados sincronizados com o servidor!',
+      type: 'success',
+      icon: 'success',
+    });
   };
 
   onRegionChange = (region) => {
@@ -62,10 +179,17 @@ export default class Welcome extends Component {
   };
 
   render() {
-    const { region, markersSynchronized, markersNotSynchronized } = this.state;
+    const {
+      region, markersSynchronized, markersNotSynchronized, loading,
+    } = this.state;
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" />
+        <Spinner
+          visible={loading}
+          textContent="Sincronização em andamento..."
+          textStyle={styles.spinnerTextStyle}
+        />
 
         <MapView
           style={styles.map}
@@ -81,16 +205,13 @@ export default class Welcome extends Component {
               </Animated.View>
               <Callout style={styles.calloutView}>
                 <View style={styles.calloutView}>
-                  <Text style={styles.date}>Data: 20/08/2019</Text>
+                  <Text style={styles.date}>
+                    Data:
+                    {' '}
+                    {marker.date}
+                  </Text>
                   <ScrollView>
-                    <Text style={styles.info}>
-                      Bem-vindo Bem-vindo Bem-vindo Bem-vindo Bem-vindo Bem-vindo Bem-vindo
-                      Bem-vindo Bem-vindo Bem-vindo Bem-vindo Bem-vindo Bem-vindo Bem-vindo
-                      Bem-vindo Bem-vindo Bem-vindo Bem-vindo Bem-vindo Bem-vindo Bem-vindo
-                      Bem-vindo Bem-vindo Bem-vindo Bem-vindo Bem-vindo Bem-vindo Bem-vindo
-                      Bem-vindo Bem-vindo Bem-vindo Bem-vindo
-                      {' '}
-                    </Text>
+                    <Text style={styles.info}>{marker.description}</Text>
                   </ScrollView>
                 </View>
               </Callout>
@@ -102,6 +223,18 @@ export default class Welcome extends Component {
                 <Animated.View style={[styles.ringNotSynchronized]} />
                 <View style={styles.markerNotSynchronized} />
               </Animated.View>
+              <Callout style={styles.calloutView}>
+                <View style={styles.calloutView}>
+                  <Text style={styles.date}>
+                    Data:
+                    {' '}
+                    {marker.date}
+                  </Text>
+                  <ScrollView>
+                    <Text style={styles.info}>{marker.description}</Text>
+                  </ScrollView>
+                </View>
+              </Callout>
             </MapView.Marker>
           ))}
         </MapView>

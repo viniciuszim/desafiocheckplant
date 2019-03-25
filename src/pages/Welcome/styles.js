@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     width: 200,
     height: 200,
-    marginTop: 20,
+    marginTop: metrics.baseMargin * 2,
   },
   date: {
     fontSize: 12,

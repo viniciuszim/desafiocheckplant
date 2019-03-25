@@ -13,7 +13,7 @@ const styles = StyleSheet.create({
 
   containerForm: {
     flex: 1,
-    marginHorizontal: 15,
+    marginHorizontal: metrics.baseMargin + 5,
     flexDirection: 'column',
     justifyContent: 'flex-start',
   },
@@ -30,8 +30,8 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: colors.black,
-    marginTop: 10,
-    marginBottom: 30,
+    marginTop: metrics.baseMargin,
+    marginBottom: metrics.baseMargin * 3,
   },
 });
 
