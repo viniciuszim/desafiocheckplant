@@ -6,4 +6,8 @@ export default {
     markersSynchronized: '@CheckplantApp:markersSynchronized',
     markersNotSynchronized: '@CheckplantApp:markersNotSynchronized',
   },
+  pages: {
+    welcomeTitle: 'Checkplant',
+    newInfoTitle: 'Checkplant',
+  },
 };

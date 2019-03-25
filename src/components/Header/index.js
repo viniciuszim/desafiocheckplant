@@ -6,7 +6,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import styles from './styles';
 
 const MenuLeftIcon = ({ navigation }) => (
-  <TouchableOpacity onPress={() => navigation.navigate('NewInfo')}>
+  <TouchableOpacity onPress={() => navigation.state.params.handleLeftClick()}>
     <Icon name="pencil-square-o" size={styles.iconLeft.fontSize} color={styles.iconLeft.color} />
   </TouchableOpacity>
 );

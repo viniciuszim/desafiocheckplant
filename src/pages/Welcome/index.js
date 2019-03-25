@@ -17,6 +17,7 @@ import {
 
 import MapView, { Callout } from 'react-native-maps';
 
+import Location from '~/util/location';
 import Geocode from 'react-geocode';
 
 import { showMessage } from 'react-native-flash-message';
@@ -66,102 +67,37 @@ export default class Welcome extends Component {
 
   componentDidMount() {
     const { navigation } = this.props;
-    navigation.setParams({ titleParam: 'Checkplant' });
+    navigation.setParams({ titleParam: stringsUtil.pages.welcomeTitle });
+    navigation.setParams({ handleLeftClick: this.handleNewInfo.bind(this) });
     navigation.setParams({ handleRightClick: this.handleSync.bind(this) });
 
-    this.checkPermissions();
+    Location.checkPermissions(this.updateMap);
   }
 
-  checkPermissions = async () => {
-    try {
-      if (Platform.OS === 'ios') {
-        this.requestPermissions();
-      } else {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: 'Localização',
-            message:
-              'Permitir acesso a sua localização para salvar os registros',
-            buttonNeutral: 'Pergunte depois',
-            buttonNegative: 'Continuar não permitindo',
-            buttonPositive: 'OK',
-          },
-        );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          this.requestPermissions();
-        } else {
-          this.showAlert();
-        }
-      }
-    } catch (err) {
-      console.error(`An error occurred at checkPermissions -> ${err}`);
-    }
-  };
-
-  requestPermissions = async () => {
-    try {
-      navigator.geolocation.getCurrentPosition(
-        (response) => {
-          // set Google Maps Geocoding API for purposes of quota management.
-          Geocode.setApiKey(stringsUtil.keys.geocode);
-
-          // Enable or disable logs. Its optional.
-          Geocode.enableDebug();
-
-          const { region } = this.state;
-          this.setState({
-            region: {
-              ...region,
-              latitude: response.coords.latitude,
-              longitude: response.coords.longitude,
-            },
-          });
-          console.tron.log(response.coords);
-        },
-        (error) => {
-          if (error.PERMISSION_DENIED === 1) {
-            this.showAlert();
-          }
-        },
-      );
-    } catch (err) {
-      console.error(`An error occurred at requestPermissions -> ${err}`);
-    }
-  }
-
-  showAlert = () => {
-    Alert.alert(
-      'Localização',
-      'Permitir acesso a sua localização para salvar os registros',
-      [
-        {
-          text: 'Pergunte depois',
-          onPress: () => console.log('Ask me later pressed'),
-        },
-        {
-          text: 'Continuar não permitindo',
-          onPress: () => console.log('Cancel Pressed'),
-          style: 'cancel',
-        },
-        {
-          text: 'Permitir',
-          onPress: () => this.openAppSettings(),
-        },
-      ],
-      {
-        cancelable: false,
+  updateMap = (coords) => {
+    const { region } = this.state;
+    this.setState({
+      region: {
+        ...region,
+        // latitude: coords.latitude,
+        // longitude: coords.longitude,
+        latitude: -16.688,
+        longitude: -49.2558,
       },
-    );
+    });
+  }
+
+  onRegionChange = (region) => {
+    this.setState({ region });
   };
 
-  openAppSettings = () => {
-    if (Platform.OS === 'ios') {
-      Linking.openURL('app-settings:');
-    } else {
-      const { RNAndroidOpenSettings } = NativeModules;
-      RNAndroidOpenSettings.appDetailsSettings();
-    }
+  handleNewInfo = async () => {
+    const { navigation } = this.props;
+    const { region } = this.state;
+    navigation.navigate('NewInfo', {
+      titleParam: stringsUtil.pages.newInfoTitle,
+      regionParam: region,
+    });
   };
 
   handleSync = async () => {
@@ -172,10 +108,6 @@ export default class Welcome extends Component {
       type: 'success',
       icon: 'success',
     });
-  };
-
-  onRegionChange = (region) => {
-    this.setState({ region });
   };
 
   render() {
@@ -195,6 +127,7 @@ export default class Welcome extends Component {
           style={styles.map}
           loadingEnabled
           region={region}
+          showsUserLocation
           onRegionChange={this.onRegionChange}
         >
           {markersSynchronized.map(marker => (

@@ -31,18 +31,20 @@ export default class Welcome extends Component {
   });
 
   state = {
+    region: {},
     infoInput: '',
   };
 
   componentDidMount() {
     const { navigation } = this.props;
-    navigation.setParams({ titleParam: 'Checkplant' });
     navigation.setParams({ handleRightClick: this.handleSaveInformation.bind(this) });
+
+    const region = navigation.getParam('regionParam');
+    this.setState({ region });
   }
 
   handleSaveInformation = async () => {
-    const { infoInput } = this.state;
-    console.tron.log(`infoInput: ${infoInput}`);
+    const { region, infoInput } = this.state;
 
     if (infoInput === '') {
       showMessage({
@@ -52,6 +54,12 @@ export default class Welcome extends Component {
       });
       return false;
     }
+
+    const info = {
+      coordinate: region,
+      date: new Date(),
+      description: infoInput,
+    };
 
     showMessage({
       message: 'Informação salva localmente!',
