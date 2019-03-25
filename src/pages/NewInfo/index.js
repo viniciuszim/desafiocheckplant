@@ -1,6 +1,10 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import { Creators as AnnotationsPageActions } from '~/store/ducks/annotations';
+
 import {
   Text,
   TextInput,
@@ -15,11 +19,19 @@ import { showMessage } from 'react-native-flash-message';
 
 import styles from './styles';
 
-export default class Welcome extends Component {
+class NewInfo extends Component {
   static propTypes = {
     navigation: PropTypes.shape({
       navigate: PropTypes.func,
     }).isRequired,
+    annotations: PropTypes.shape({
+      dataSynchronized: PropTypes.oneOfType([null, PropTypes.arrayOf(PropTypes.shape())]),
+      dataNotSynchronized: PropTypes.oneOfType([null, PropTypes.arrayOf(PropTypes.shape())]),
+      loading: PropTypes.bool,
+      success: PropTypes.oneOfType([null, PropTypes.string]),
+      error: PropTypes.oneOfType([null, PropTypes.string]),
+    }).isRequired,
+    addAnnotationRequest: PropTypes.func.isRequired,
   };
 
   static navigationOptions = ({ navigation }) => ({
@@ -43,6 +55,19 @@ export default class Welcome extends Component {
     this.setState({ region });
   }
 
+  componentDidUpdate() {
+    const { annotations } = this.props;
+    if (annotations.success !== null && annotations.success !== '') {
+      showMessage({
+        message: annotations.success,
+        type: 'success',
+        icon: 'success',
+      });
+      const { navigation } = this.props;
+      navigation.navigate('Welcome');
+    }
+  }
+
   handleSaveInformation = async () => {
     const { region, infoInput } = this.state;
 
@@ -52,22 +77,17 @@ export default class Welcome extends Component {
         type: 'warning',
         icon: 'warning',
       });
-      return false;
+      return;
     }
 
-    const info = {
+    const annotation = {
       coordinate: region,
       date: new Date(),
       description: infoInput,
     };
 
-    showMessage({
-      message: 'Informação salva localmente!',
-      type: 'success',
-      icon: 'success',
-    });
-    const { navigation } = this.props;
-    navigation.navigate('Welcome');
+    const { addAnnotationRequest } = this.props;
+    addAnnotationRequest(annotation);
   };
 
   render() {
@@ -94,3 +114,19 @@ export default class Welcome extends Component {
     );
   }
 }
+
+const mapStateToProps = state => ({
+  annotations: state.annotations,
+});
+
+const mapDispatchToProps = dispatch => bindActionCreators(
+  {
+    ...AnnotationsPageActions,
+  },
+  dispatch,
+);
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(NewInfo);

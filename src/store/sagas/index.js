@@ -1,8 +1,11 @@
 import { all, takeLatest } from 'redux-saga/effects';
 
-import { Types as FavoriteTypes } from '~/store/ducks/favorites';
-import { addFavoriteRequest } from './favorites';
+import { Types as AnnotationTypes } from '~/store/ducks/annotations';
+import { getAnnotationsRequest, addAnnotationRequest } from './annotations';
 
 export default function* rootSaga() {
-  return yield all([takeLatest(FavoriteTypes.ADD_REQUEST, addFavoriteRequest)]);
+  return yield all([
+    takeLatest(AnnotationTypes.GET_REQUEST, getAnnotationsRequest),
+    takeLatest(AnnotationTypes.ADD_REQUEST, addAnnotationRequest),
+  ]);
 }

@@ -1,7 +1,7 @@
 import { combineReducers } from 'redux';
 
-import favorites from './favorites';
+import annotations from './annotations';
 
 export default combineReducers({
-  favorites,
+  annotations,
 });
