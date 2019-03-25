@@ -1,0 +1,72 @@
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+
+import {
+  Text,
+  TextInput,
+  StatusBar,
+  SafeAreaView,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
+
+import styles from './styles';
+
+export default class Welcome extends Component {
+  static propTypes = {
+    navigation: PropTypes.shape({
+      navigate: PropTypes.func,
+    }).isRequired,
+  };
+
+  static navigationOptions = ({ navigation }) => ({
+    headerRight: (
+      <TouchableOpacity onPress={() => navigation.state.params.handleRightClick()}>
+        <Icon name="check-circle" size={styles.iconRight.fontSize} color={styles.iconRight.color} />
+      </TouchableOpacity>
+    ),
+  });
+
+  state = {
+    infoInput: '',
+  };
+
+  componentDidMount() {
+    const { navigation } = this.props;
+    navigation.setParams({ titleParam: 'Checkplant' });
+    navigation.setParams({ handleRightClick: this.handleSaveInformation.bind(this) });
+  }
+
+  handleSaveInformation = async () => {
+    const { infoInput } = this.state;
+    console.tron.log(`infoInput: ${infoInput}`);
+
+    const { navigation } = this.props;
+    navigation.navigate('Welcome');
+  };
+
+  render() {
+    const { infoInput } = this.state;
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" />
+        <KeyboardAvoidingView style={styles.containerForm} behavior="padding">
+          <Text style={styles.title}>Entre com a descrição:</Text>
+          <TextInput
+            style={styles.textInput}
+            autoCapitalize="none"
+            autoCorrect={false}
+            placeholder="Informe aqui..."
+            placeholderTextColor={styles.textInput.borderColor}
+            underlineColorAndroid="transparent"
+            multiline
+            numberOfLines={20}
+            value={infoInput}
+            onChangeText={text => this.setState({ infoInput: text })}
+          />
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    );
+  }
+}
