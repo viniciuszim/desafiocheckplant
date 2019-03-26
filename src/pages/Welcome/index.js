@@ -83,15 +83,15 @@ class Welcome extends Component {
     this.setState({
       region: {
         ...region,
-        // latitude: coords.latitude,
-        // longitude: coords.longitude,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
         // ==== PARA TESTES LOCAIS ====
         // latitude: -16.688,
         // longitude: -49.2558,
         // latitude: -16.6769,
         // longitude: -49.2648,
-        latitude: -16.6870,
-        longitude: -49.2548,
+        // latitude: -16.6870,
+        // longitude: -49.2548,
       },
     });
   }
