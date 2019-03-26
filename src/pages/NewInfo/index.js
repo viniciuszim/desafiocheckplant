@@ -12,12 +12,16 @@ import {
   SafeAreaView,
   TouchableOpacity,
   KeyboardAvoidingView,
+  AsyncStorage,
 } from 'react-native';
+
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { showMessage } from 'react-native-flash-message';
 
 import styles from './styles';
+
+import stringsUtil from '~/util/strings';
 
 class NewInfo extends Component {
   static propTypes = {
@@ -55,19 +59,6 @@ class NewInfo extends Component {
     this.setState({ region });
   }
 
-  componentDidUpdate() {
-    const { annotations } = this.props;
-    if (annotations.success !== null && annotations.success !== '') {
-      showMessage({
-        message: annotations.success,
-        type: 'success',
-        icon: 'success',
-      });
-      const { navigation } = this.props;
-      navigation.navigate('Welcome');
-    }
-  }
-
   handleSaveInformation = async () => {
     const { region, infoInput } = this.state;
 
@@ -81,14 +72,41 @@ class NewInfo extends Component {
     }
 
     const annotation = {
+      id: (new Date()).getTime(),
       coordinate: region,
       date: new Date(),
       description: infoInput,
     };
 
-    const { addAnnotationRequest } = this.props;
+    await this.saveLocally(annotation);
+
+    const { navigation, addAnnotationRequest } = this.props;
     addAnnotationRequest(annotation);
+
+    navigation.navigate('Welcome');
   };
+
+  saveLocally = async (annotation) => {
+    try {
+      let notes = await AsyncStorage.getItem(stringsUtil.storage.markersNotSynchronized);
+      if (notes !== null) {
+        notes = JSON.parse(notes);
+      } else {
+        notes = [];
+      }
+
+      notes = [...notes, annotation];
+
+      await AsyncStorage.setItem(
+        stringsUtil.storage.markersNotSynchronized,
+        JSON.stringify(notes),
+      );
+    } catch (error) {
+      if (__DEV__) {
+        console.tron.error(error);
+      }
+    }
+  }
 
   render() {
     const { infoInput } = this.state;

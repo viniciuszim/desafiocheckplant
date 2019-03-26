@@ -12,6 +12,8 @@ import {
   Animated,
   SafeAreaView,
   ScrollView,
+  AsyncStorage,
+  NetInfo,
 } from 'react-native';
 
 import MapView, { Callout } from 'react-native-maps';
@@ -37,7 +39,7 @@ class Welcome extends Component {
       success: PropTypes.oneOfType([null, PropTypes.string]),
       error: PropTypes.oneOfType([null, PropTypes.string]),
     }).isRequired,
-    getAnnotationRequest: PropTypes.func.isRequired,
+    addAnnotationRequest: PropTypes.func.isRequired,
   };
 
   state = {
@@ -47,17 +49,33 @@ class Welcome extends Component {
       latitudeDelta: 0.04864195044303443,
       longitudeDelta: 0.040142817690068,
     },
+    dataSynchronized: [],
+    dataNotSynchronized: [],
   };
 
+  componentWillReceiveProps(nextProps) {
+    const { annotations } = nextProps;
+    if (annotations.success !== null && annotations.success !== '') {
+      showMessage({
+        message: annotations.success,
+        type: 'success',
+        icon: 'success',
+      });
+    }
+    this.checkSynchronizedAnnotations();
+    this.checkNotSynchronizedAnnotations();
+  }
+
   componentDidMount() {
-    const { navigation, getAnnotationRequest } = this.props;
+    const { navigation } = this.props;
     navigation.setParams({ titleParam: stringsUtil.pages.welcomeTitle });
     navigation.setParams({ handleLeftClick: this.handleNewInfo.bind(this) });
     navigation.setParams({ handleRightClick: this.handleSync.bind(this) });
 
     Location.checkPermissions(this.updateMap);
 
-    getAnnotationRequest();
+    this.checkSynchronizedAnnotations();
+    this.checkNotSynchronizedAnnotations();
   }
 
   updateMap = (coords) => {
@@ -67,12 +85,13 @@ class Welcome extends Component {
         ...region,
         // latitude: coords.latitude,
         // longitude: coords.longitude,
+        // ==== PARA TESTES LOCAIS ====
         // latitude: -16.688,
         // longitude: -49.2558,
-        latitude: -16.6769,
-        longitude: -49.2648,
-        // latitude: -16.6870,
-        // longitude: -49.2548,
+        // latitude: -16.6769,
+        // longitude: -49.2648,
+        latitude: -16.6870,
+        longitude: -49.2548,
       },
     });
   }
@@ -90,19 +109,80 @@ class Welcome extends Component {
     });
   };
 
+  checkSynchronizedAnnotations = async () => {
+    const { annotations } = this.props;
+    const { dataSynchronized } = annotations;
+
+    if (dataSynchronized === null || dataSynchronized.length === 0) {
+      const syncsJSON = await AsyncStorage.getItem(stringsUtil.storage.markersSynchronized);
+      if (syncsJSON !== null) {
+        const syncsArray = JSON.parse(syncsJSON);
+        this.setState({ dataSynchronized: syncsArray });
+      }
+    } else {
+      this.setState({ dataSynchronized });
+    }
+  }
+
+  checkNotSynchronizedAnnotations = async () => {
+    // await AsyncStorage.clear();
+    let annotationsNotSynchronized = await AsyncStorage.getItem(
+      stringsUtil.storage.markersNotSynchronized,
+    );
+    if (annotationsNotSynchronized !== null) {
+      annotationsNotSynchronized = JSON.parse(annotationsNotSynchronized);
+    } else {
+      annotationsNotSynchronized = [];
+    }
+
+    this.setState({ dataNotSynchronized: annotationsNotSynchronized });
+  }
+
   handleSync = async () => {
-    showMessage({
-      message: 'Dados sincronizados com o servidor!',
-      type: 'success',
-      icon: 'success',
-    });
+    try {
+      NetInfo.isConnected.fetch().done(async (isConnected) => {
+        if (isConnected) {
+          const notSyncsJSON = await AsyncStorage.getItem(
+            stringsUtil.storage.markersNotSynchronized,
+          );
+          if (notSyncsJSON !== null) {
+            const { addAnnotationRequest } = this.props;
+            const notSyncsArray = JSON.parse(notSyncsJSON);
+            notSyncsArray.map(notSync => addAnnotationRequest(notSync));
+          }
+
+          this.checkSynchronizedAnnotations();
+          this.checkNotSynchronizedAnnotations();
+
+          showMessage({
+            message: 'Dados sincronizados com o servidor!',
+            type: 'success',
+            icon: 'success',
+          });
+        } else {
+          showMessage({
+            message: 'Sem internet no momento, tente mais tarde!',
+            type: 'warning',
+            icon: 'warning',
+          });
+        }
+      });
+    } catch (error) {
+      showMessage({
+        message: 'Erro ao sincronizar com o servidor, tente mais tarde!',
+        type: 'error',
+        icon: 'error',
+      });
+    }
   };
 
   render() {
-    const { region, loading } = this.state;
-    const { annotations } = this.props;
-    const { dataSynchronized, dataNotSynchronized } = annotations;
-    console.tron.warn(dataNotSynchronized);
+    const {
+      region,
+      dataSynchronized,
+      dataNotSynchronized,
+      loading,
+    } = this.state;
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" />
