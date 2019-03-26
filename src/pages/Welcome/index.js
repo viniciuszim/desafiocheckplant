@@ -22,6 +22,8 @@ import Location from '~/util/location';
 
 import { showMessage } from 'react-native-flash-message';
 import Spinner from 'react-native-loading-spinner-overlay';
+import moment from 'moment';
+import 'moment/locale/pt-br';
 
 import styles from './styles';
 
@@ -210,7 +212,7 @@ class Welcome extends Component {
                   <Text style={styles.date}>
                     Data:
                     {' '}
-                    {/* {marker.date} */}
+                    {moment(marker.date).format('DD/MM/YYYY HH:mm:ss')}
                   </Text>
                   <ScrollView>
                     <Text style={styles.info}>{marker.description}</Text>
@@ -230,7 +232,7 @@ class Welcome extends Component {
                   <Text style={styles.date}>
                     Data:
                     {' '}
-                    {/* {marker.date} */}
+                    {moment(marker.date).format('DD/MM/YYYY HH:mm:ss')}
                   </Text>
                   <ScrollView>
                     <Text style={styles.info}>{marker.description}</Text>

@@ -63,6 +63,7 @@ const styles = StyleSheet.create({
     marginTop: metrics.baseMargin * 2,
   },
   date: {
+    fontWeight: 'bold',
     fontSize: 12,
     color: colors.black,
     marginBottom: 5,
