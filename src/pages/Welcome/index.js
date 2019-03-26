@@ -142,6 +142,8 @@ class Welcome extends Component {
 
   handleSync = async () => {
     try {
+      this.setState({ loading: true });
+
       NetInfo.isConnected.fetch().done(async (isConnected) => {
         if (isConnected) {
           const notSyncsJSON = await AsyncStorage.getItem(
@@ -168,6 +170,7 @@ class Welcome extends Component {
             icon: 'warning',
           });
         }
+        this.setState({ loading: false });
       });
     } catch (error) {
       showMessage({
@@ -175,6 +178,7 @@ class Welcome extends Component {
         type: 'error',
         icon: 'error',
       });
+      this.setState({ loading: false });
     }
   };
 
