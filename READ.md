@@ -6,8 +6,10 @@ A tela principal do app, será um mapa com alguns pinos, e mais dois botões: Ad
 Sincronizar.
 
 Adicionar:
+
 • O botão de Adicionar abre um formulário para o usuário digitar uma anotação, em um
 campo de texto longo, permitindo nova linha, etc...
+
 • Ao salvar o texto, pegar a localização de GPS do app e a data/hora do momento e
 salvar no banco local do app.
 • Esta operação de Adicionar deve funcionar 100% offline, onde o usuário pode
